@@ -66,18 +66,9 @@ def build_animal_loaders(
     max_val_per_class: int = 100,
     max_test_per_class: int = 100,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, List[str]]:
-    """
-    使用 CIFAR-10 构建一个“小样本动物数据集”：
-    选取 6 个动物类别，并对每类样本数进行上限裁剪。
-    """
 
-    # CIFAR-10 官方类别顺序：
-    # 0 airplane, 1 automobile, 2 bird, 3 cat, 4 deer,
-    # 5 dog, 6 frog, 7 horse, 8 ship, 9 truck
     animal_class_indices = [2, 3, 4, 5, 6, 7]
     animal_class_names = ["bird", "cat", "deer", "dog", "frog", "horse"]
-
-    # 图像预处理：与 ImageNet 预训练模型保持一致
     imagenet_mean = (0.485, 0.456, 0.406)
     imagenet_std = (0.229, 0.224, 0.225)
 
@@ -106,7 +97,6 @@ def build_animal_loaders(
         ]
     )
 
-    # 加载 CIFAR-10 原始数据（不带 transform，便于自定义）
     base_train = CIFAR10(root=data_dir, train=True, download=True)
     base_test = CIFAR10(root=data_dir, train=False, download=True)
 
@@ -115,7 +105,7 @@ def build_animal_loaders(
     test_data = base_test.data
     test_targets = base_test.targets
 
-    # 按类别收集索引，并限制每类样本数量（训练 + 验证）
+    # 按类别收集索引
     train_indices_per_class = {c: [] for c in animal_class_indices}
     for idx, label in enumerate(train_targets):
         if label in train_indices_per_class:
@@ -142,7 +132,6 @@ def build_animal_loaders(
     for c in animal_class_indices:
         test_indices.extend(test_indices_per_class[c])
 
-    # 构造三个子集
     train_dataset = AnimalSubset(
         data=train_data,
         targets=train_targets,
@@ -333,10 +322,6 @@ def show_misclassified_examples(
     imagenet_mean=(0.485, 0.456, 0.406),
     imagenet_std=(0.229, 0.224, 0.225),
 ):
-    """
-    显示一批样本中预测错误的图像，方便误差分析。
-    images: 归一化后的张量 (N, 3, H, W)，尚未移动到 CPU。
-    """
 
     mis_idx = np.where(true_labels != pred_labels)[0]
     if len(mis_idx) == 0:
